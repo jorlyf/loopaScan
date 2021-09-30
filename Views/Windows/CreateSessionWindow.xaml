@@ -4,19 +4,23 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:loopaScan.Views.Windows"
-        Title="Создание сессии" Height="170" Width="150"
+        Title="Создание сессии" Height="200" Width="150"
         ResizeMode="NoResize">
     
-    <StackPanel HorizontalAlignment="Center" Width="100">
+    <StackPanel HorizontalAlignment="Center" Width="120">
         <StackPanel Margin="0, 8">
             <TextBlock Text="Имя сессии" FontWeight="DemiBold" HorizontalAlignment="Center"/>
             <TextBox Name="SessionName" />
         </StackPanel>
 
         <StackPanel>
-            <TextBlock Text=""/>
+            <TextBlock Text="Количество потоков" FontWeight="DemiBold" HorizontalAlignment="Center"/>
+            <TextBox Name="SessionThreadsCount" />
+        </StackPanel>
+
+        <StackPanel>
             <TextBlock Text="Файл" FontWeight="DemiBold"  HorizontalAlignment="Center"/>
-            <Button Content="Выбрать" Width="60"/>
+            <Button Content="Выбрать" Click="OpenFile" Width="60"/>
         </StackPanel>
 
         <Button Content="Создать" Click="Create" FontWeight="Bold" Margin="0, 15, 0, 0"/>

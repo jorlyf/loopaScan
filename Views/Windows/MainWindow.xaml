@@ -4,30 +4,67 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:vm="clr-namespace:loopaScan.ViewModels"
+        xmlns:i="clr-namespace:System.Windows.Interactivity;assembly=System.Windows.Interactivity"
         xmlns:local="clr-namespace:loopaScan.Views"
-        Title="loopa 2.0" Height="250" Width="450">
+        Title="loopaScan" Height="250" Width="450"
+        ResizeMode="NoResize">
 
     <Window.DataContext>
         <vm:MainViewModel />
     </Window.DataContext>
 
+    <i:Interaction.Triggers>
+        <i:EventTrigger EventName="Closing">
+            <i:InvokeCommandAction Command="{Binding WindowCloseCommand}" />
+        </i:EventTrigger>
+    </i:Interaction.Triggers>
+
     <DockPanel>
         <StatusBar DockPanel.Dock="Bottom">
             <StatusBarItem>
-                <TextBlock Text="{Binding ForTests}"/>
+                <TextBlock Text="{Binding CurrentSession.Name, TargetNullValue=Сессия не выбрана, FallbackValue=Сессия не выбрана}" />
             </StatusBarItem>
         </StatusBar>
         <TabControl DockPanel.Dock="Top" >
 
             <TabItem Header="Сканер" >
-
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition />
+                        <ColumnDefinition Width="2*"/>
+                    </Grid.ColumnDefinitions>
+                    
+                    <UniformGrid Grid.Column="0" Columns="1" Margin="5" >
+                        <Button Content="Сканировать" Command="{Binding RunScanCommand}" Margin="2"/>
+                        <Button Content="Остановить" Command="{Binding StopScanCommand}" Margin="2"/>
+                    </UniformGrid>
+                    <Grid Grid.Column="1" Margin="5" Visibility="{Binding StatusIsVisible}">
+                        <Grid.RowDefinitions>
+                            <RowDefinition />
+                            <RowDefinition Height="32"/>
+                        </Grid.RowDefinitions>
+                        <StackPanel Grid.Row="0" >
+                            <TextBlock>
+                                <Run Text="Просканировано"/>
+                                <Run Text="{Binding CurrentSession.ScannedIPsCount}"/>
+                                <Run Text="/"/>
+                                <Run Text="{Binding CurrentSession.IPsCount}"/>
+                            </TextBlock>
+                        </StackPanel>
+                        <StackPanel Grid.Row="1" >
+                            <TextBlock Text="Прогресс"/>
+                            <ProgressBar Height="15" Value="50"/>
+                        </StackPanel>
+                    </Grid>
+                </Grid>
             </TabItem>
 
             <TabItem Header="Визуализатор" >
 
             </TabItem>
 
-            <TabItem Header="Сессия" >
+            <TabItem Header="Сессии" IsEnabled="False" >
+
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition />
@@ -37,17 +74,15 @@
                     <GridSplitter Width="5" Background="SteelBlue" Opacity="0.6"/>
 
                     <!--Информация о текущей сессии-->
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition />
-                            <RowDefinition />
-                            <RowDefinition Height="3*"/>
-                        </Grid.RowDefinitions>
-                        
-                        <TextBlock Text="Имя сессии: dota" Grid.Row="0"/>
-                        <TextBlock Text="Файл сессии: 123.txt" Grid.Row="1"/>
-                        <TextBlock Text="Просканировано: 251 из 612664 ip-адресов (27 валидных)" TextWrapping="Wrap" Grid.Row="2"/>
-                    </Grid>
+                    <StackPanel Visibility="{Binding StatusIsVisible}" >
+                        <TextBlock Text="{Binding CurrentSession.Name, StringFormat=Имя сессии: {0}}"/>
+                        <TextBlock Text="{Binding CurrentSession.FileName, StringFormat=Файл: {0}}"/>
+                        <TextBlock Text="{Binding CurrentSession.ThreadsCount, StringFormat=Потоков: {0}}"/>
+                        <TextBlock>
+                            <Run Text="Просканировано"/>
+                            <Run Text="{Binding CurrentSession.ScannedIPsCount}"/>
+                        </TextBlock>
+                    </StackPanel>
                     
                     <!--Список сессий и управление ими-->
                     <Grid Grid.Column="1">
@@ -56,18 +91,15 @@
                             <RowDefinition Height="1*"/>
                         </Grid.RowDefinitions>
 
-                        <ListBox Grid.Row="0" Background="GhostWhite">
-                            <ListBoxItem Content="123"/>
-                            <ListBoxItem Content="123"/>
-                            <ListBoxItem Content="123"/>
-                            <ListBoxItem Content="123"/>
-                            <ListBoxItem Content="123"/>
-                            <ListBoxItem Content="123"/>
-                            <ListBoxItem Content="123"/>
-                        </ListBox>
+                        <GroupBox Header="Сессии">
+                            <ListBox Grid.Row="0" ItemsSource="{Binding AllSessions}"
+                                     DisplayMemberPath="Name"
+                                     SelectedItem="{Binding CurrentSession}"
+                                     Background="GhostWhite" />
+                        </GroupBox>
                         <UniformGrid Columns="2" Grid.Row="1" Background="WhiteSmoke">
                             <Button Margin="2" Content="Создать сессию" Command="{Binding CreateSessionCommand}" />
-                            <Button Margin="2" Content="Удалить сессию" />
+                            <Button Margin="2" Content="Удалить сессию" Command="{Binding DeleteSessionCommand}" CommandParameter="{Binding CurrentSession}" />
                         </UniformGrid>
                     </Grid>
                     
