@@ -24,23 +24,21 @@ namespace loopaScan.Models
         {
             return Session;
         }
-        public void RunScan()
+        public async void RunScan()
         {
             if (IsScanning || Session == null) return;
 
             if (IPsList.Count > 0)
             {
-                int n = (IPsList.Count / Session.ThreadsCount) + 1;
-                for (int i = Session.ScannedIPsCount; i < IPsList.Count; i += n)
+                await Task.Run(() =>
                 {
-                    if (i + n >= IPsList.Count)
+                    List<List<string>> list = Generic.SplitStringList(IPsList, Session.ThreadsCount);
+
+                    foreach (List<string> lst in list)
                     {
-                        n -= i + n - IPsList.Count; // avoid segmentation fault
+                        CreateScanTask(lst);
                     }
-                    List<string> ips = IPsList.GetRange(i, n);
-                    CreateScanTask(ips);
-                }
-                IsScanning = true;
+                });
             } else System.Windows.MessageBox.Show("IP-адреса не обнаружены");
         }
         public void StopScan()
@@ -50,11 +48,10 @@ namespace loopaScan.Models
         }
         private async void CreateScanTask(List<string> ips)
         {
-            await Task.Run(async () =>
+            await Task.Run(() =>
             {
                 foreach (string ip in ips)
                 {
-                    await Task.Delay(15); // for tests
                     ScanIP(ip);
 
                     if (!IsScanning)
@@ -71,7 +68,7 @@ namespace loopaScan.Models
             if (scan.IsSuccess)
             {
                 Session.ScannedSuccessIPsCount++;
-                scan.Save();
+                scan.Save(Session.Name);
             }
         }
         private bool OpenFile(Session session)
@@ -79,6 +76,7 @@ namespace loopaScan.Models
             try
             {
                 IPsList = new List<string>(File.ReadAllLines($"{Directories.IPfiles}\\{session.FileName}"));
+                Session.IPsCount = IPsList.Count;
                 return true;
             }
             catch { return false; }

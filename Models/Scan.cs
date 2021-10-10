@@ -1,5 +1,8 @@
-﻿using System.Net;
+﻿using System;
+using System.Net;
 using System.IO;
+
+using loopaScan.Infrastructure;
 
 namespace loopaScan.Models
 {
@@ -7,7 +10,7 @@ namespace loopaScan.Models
     {
         public string IP;
         public bool IsSuccess;
-        public string Response;
+        // public string Content;
         public Scan(string ip)
         {
             IP = ip;
@@ -15,27 +18,25 @@ namespace loopaScan.Models
         }
         private void Run()
         {
+            IsSuccess = false;
             try
             {
                 WebRequest request = (HttpWebRequest)WebRequest.Create($"http://{IP}");
                 WebResponse response = (HttpWebResponse)request.GetResponse();
-                using (Stream stream = response.GetResponseStream())
-                {
-                    using (StreamReader reader = new StreamReader(stream))
-                    {
-                        string content = reader.ReadToEnd();
-                    }
-                }
+                //using (StreamReader stream = new StreamReader(response.GetResponseStream()))
+                //{
+                //    Content = stream.ReadToEnd();
+                //}
                 response.Close();
+                IsSuccess = true;
             }
-            catch (WebException)
-            {
-                
-            }
+            catch { }
         }
-        public void Save()
+        public void Save(string sessionName)
         {
-
+            string path = $"{Directories.IPfiles}\\{sessionName}_OUT.csv";
+            string info = $"{IP};{DateTime.Now}\n";
+            File.AppendAllText(path, info);
         }
     }
 }

@@ -33,7 +33,7 @@
                         <ColumnDefinition />
                         <ColumnDefinition Width="2*"/>
                     </Grid.ColumnDefinitions>
-                    
+
                     <UniformGrid Grid.Column="0" Columns="1" Margin="5" >
                         <Button Content="Сканировать" Command="{Binding RunScanCommand}" Margin="2"/>
                         <Button Content="Остановить" Command="{Binding StopScanCommand}" Margin="2"/>
@@ -49,21 +49,42 @@
                                 <Run Text="{Binding CurrentSession.ScannedIPsCount}"/>
                                 <Run Text="/"/>
                                 <Run Text="{Binding CurrentSession.IPsCount}"/>
+                                <LineBreak />
+                                <Run Text="{Binding CurrentSession.ScannedSuccessIPsCount, StringFormat=валидных: {0}}" />
                             </TextBlock>
                         </StackPanel>
                         <StackPanel Grid.Row="1" >
                             <TextBlock Text="Прогресс"/>
-                            <ProgressBar Height="15" Value="50"/>
+                            <ProgressBar Height="15" Value="{Binding ScanProgressBar}"/>
                         </StackPanel>
                     </Grid>
                 </Grid>
+            </TabItem>
+
+            <TabItem Header="Парсер диапозонов" >
+                <DockPanel>
+                    <Grid DockPanel.Dock="Top" Height="80" Width="200" Margin="0, 20, 0, 0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition />
+                            <ColumnDefinition />
+                        </Grid.ColumnDefinitions>
+                        
+                        <StackPanel Grid.Column="0">
+                            <Button Command="{Binding OpenFileForParseIPRangesCommand}" Content="Выбрать файл" Margin="5" Height="25" VerticalAlignment="Top" />
+                            <TextBlock Text="{Binding IPParser.Filepath}" HorizontalAlignment="Center"/>
+                        </StackPanel>
+                        <Button Command="{Binding StartParseIPRangesCommand}" Content="Парсить" Margin="5" Grid.Column="1" Height="25" VerticalAlignment="Top" />
+                    </Grid>
+
+                    <TextBlock DockPanel.Dock="Bottom" Text="Файл будет сохранен в той же папке с окончанием '_OUT'" VerticalAlignment="Bottom" HorizontalAlignment="Center"/>
+                </DockPanel>
             </TabItem>
 
             <TabItem Header="Визуализатор" >
 
             </TabItem>
 
-            <TabItem Header="Сессии" IsEnabled="False" >
+            <TabItem Header="Сессии" IsEnabled="{Binding CanChangeSession}" >
 
                 <Grid>
                     <Grid.ColumnDefinitions>
@@ -83,7 +104,7 @@
                             <Run Text="{Binding CurrentSession.ScannedIPsCount}"/>
                         </TextBlock>
                     </StackPanel>
-                    
+
                     <!--Список сессий и управление ими-->
                     <Grid Grid.Column="1">
                         <Grid.RowDefinitions>
@@ -102,7 +123,7 @@
                             <Button Margin="2" Content="Удалить сессию" Command="{Binding DeleteSessionCommand}" CommandParameter="{Binding CurrentSession}" />
                         </UniformGrid>
                     </Grid>
-                    
+
                 </Grid>
             </TabItem>
 
@@ -112,5 +133,5 @@
 
         </TabControl>
     </DockPanel>
-     
+
 </Window>

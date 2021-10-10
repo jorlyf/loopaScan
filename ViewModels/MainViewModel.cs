@@ -1,6 +1,7 @@
 ﻿using System.Windows.Input;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
+using System.Windows;
 
 using loopaScan.ViewModels.Base;
 using loopaScan.Models;
@@ -21,18 +22,24 @@ namespace loopaScan.ViewModels
             AllSessions = SessionController.GetSessions();
 
             Scaner = new Scaner();
+            StartScanCountUpdater();
+
+            IPParser = new IPParser();
 
             CreateSessionCommand = new RelayCommand(OnCreateSessionCommandExecuted, CanCreateSessionCommandExecute);
             DeleteSessionCommand = new RelayCommand(OnDeleteSessionCommandExecuted, CanDeleteSessionCommandExecute);
             WindowCloseCommand = new RelayCommand(OnWindowCloseCommandExecuted);
             RunScanCommand = new RelayCommand(OnRunScanCommandExecuted, CanRunScanCommandExecute);
             StopScanCommand = new RelayCommand(OnStopScanCommandExecuted, CanStopScanCommandExecute);
+            OpenFileForParseIPRangesCommand = new RelayCommand(OnOpenFileForParseIPRangesCommandExecuted);
+            StartParseIPRangesCommand = new RelayCommand(OnStartParseIPRangesCommandExecuted, CanStartParseIPRangesCommandExecute);
         }
         #endregion
 
         #region Models
         SessionController SessionController;
-        Scaner Scaner;
+        public Scaner Scaner;
+        public IPParser IPParser;
         #endregion
 
         #region StatusIsVisible
@@ -41,6 +48,15 @@ namespace loopaScan.ViewModels
         {
             get => _StatusIsVisible;
             set => Set(ref _StatusIsVisible, value);
+        }
+        #endregion
+
+        #region CanChangeSession
+        private bool _CanChangeSession = true;
+        public bool CanChangeSession
+        {
+            get => _CanChangeSession;
+            set => Set(ref _CanChangeSession, value);
         }
         #endregion
 
@@ -66,6 +82,7 @@ namespace loopaScan.ViewModels
             set => Set(ref _AllSessions, value);
         }
         #endregion
+
 
         #region Commands
 
@@ -104,10 +121,12 @@ namespace loopaScan.ViewModels
         {
             Session ss = Scaner.GetSession();
             if (ss != null) ss.Save();
-            
+
             SessionController.SaveSessions(AllSessions);
         }
         #endregion
+
+        #region Scaner
 
         #region RunScanCommand
         public ICommand RunScanCommand { get; }
@@ -116,7 +135,9 @@ namespace loopaScan.ViewModels
         {
             Scaner.LoadSession(CurrentSession);
             Scaner.RunScan();
-            StartScanCountUpdater();
+            CurrentSession.IPsCount = Scaner.GetSession().IPsCount;
+            OnPropertyChanged("CurrentSession");
+            if (Scaner.IsScanning) CanChangeSession = false;
         }
         #endregion
 
@@ -126,19 +147,64 @@ namespace loopaScan.ViewModels
         private void OnStopScanCommandExecuted(object p)
         {
             Scaner.StopScan();
+            CanChangeSession = true;
         }
         #endregion
 
         #endregion
 
-        #region ScanCountUpdater
+        #region IPRangeParser
+
+        #region OpenFileForParseIPRangesCommand
+        public ICommand OpenFileForParseIPRangesCommand { get; }
+        private void OnOpenFileForParseIPRangesCommandExecuted(object p)
+        {
+            IPParser.Load();
+        }
+        #endregion
+
+        #region StartParseIPRangesCommand
+        public ICommand StartParseIPRangesCommand { get; }
+        private bool CanStartParseIPRangesCommandExecute(object p) => true;
+        private void OnStartParseIPRangesCommandExecuted(object p)
+        {
+            if (IPParser.Start())
+                MessageBox.Show("Готово!");
+        }
+        #endregion
+
+        #endregion
+
+        #endregion
+
+        #region StartScanCountUpdater
+        private double _ScanProgressBar;
+        public double ScanProgressBar
+        {
+            get => _ScanProgressBar;
+            set => Set(ref _ScanProgressBar, value);
+        }
         private async void StartScanCountUpdater()
         {
-                while (Scaner.IsScanning)
+            while (true)
+            {
+                if (CurrentSession != null)
                 {
-                    CurrentSession.ScannedIPsCount = Scaner.GetSession().ScannedIPsCount;
-                    await Task.Delay(200);
+                    if (Scaner.IsScanning)
+                    {
+                        CurrentSession.ScannedIPsCount = Scaner.GetSession().ScannedIPsCount;
+                        CurrentSession.ScannedSuccessIPsCount = Scaner.GetSession().ScannedSuccessIPsCount;
+                        ScanProgressBar = CurrentSession.ScannedIPsCount / CurrentSession.IPsCount * 100;
+                        MessageBox.Show(ScanProgressBar.ToString());
+                        OnPropertyChanged("CurrentSession");
+                        OnPropertyChanged("ScanProgressBar");
+
+                        if (CurrentSession.ScannedIPsCount == CurrentSession.IPsCount)
+                            OnStopScanCommandExecuted(null);
+                    }
                 }
+                await Task.Delay(5000);
+            }
         }
         #endregion
     }
