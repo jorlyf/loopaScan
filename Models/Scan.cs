@@ -9,11 +9,13 @@ namespace loopaScan.Models
     class Scan
     {
         public string IP;
+        public string Port;
         public bool IsSuccess;
-        // public string Content;
-        public Scan(string ip)
+        public string Content;
+        public Scan(string ip, string port)
         {
             IP = ip;
+            Port = port;
             Run();
         }
         private void Run()
@@ -21,22 +23,24 @@ namespace loopaScan.Models
             IsSuccess = false;
             try
             {
-                WebRequest request = (HttpWebRequest)WebRequest.Create($"http://{IP}");
-                WebResponse response = (HttpWebResponse)request.GetResponse();
-                //using (StreamReader stream = new StreamReader(response.GetResponseStream()))
-                //{
-                //    Content = stream.ReadToEnd();
-                //}
-                response.Close();
-                IsSuccess = true;
+                WebRequest request = (HttpWebRequest)WebRequest.Create($"http://{IP}:{Port}");
+                request.Timeout = 10_000; // ms
+                using (WebResponse response = (HttpWebResponse)request.GetResponse())
+                {
+                    using (StreamReader stream = new StreamReader(response.GetResponseStream()))
+                    {
+                        Content = stream.ReadLine();
+                    }
+                    IsSuccess = true;
+                    response.Close();
+                }
             }
             catch { }
         }
         public void Save(string sessionName)
         {
-            string path = $"{Directories.IPfiles}\\{sessionName}_OUT.csv";
-            string info = $"{IP};{DateTime.Now}\n";
-            File.AppendAllText(path, info);
+            string path = $"{Directories.IPfiles}\\{sessionName}_SCANNED.txt";
+            File.AppendAllText(path, $"{IP} --- {Content}\n");
         }
     }
 }

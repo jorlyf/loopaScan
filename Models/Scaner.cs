@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
-using System.IO;
 
 using loopaScan.Infrastructure;
 
@@ -15,14 +14,11 @@ namespace loopaScan.Models
             private set;
         }
         private List<string> IPsList;
+        private IPParser IPParser = new IPParser();
         public void LoadSession(Session session)
         {
             Session = session;
             if (!OpenFile(Session)) System.Windows.MessageBox.Show("Не удалось открыть файл в сканере");
-        }
-        public Session GetSession()
-        {
-            return Session;
         }
         public async void RunScan()
         {
@@ -32,6 +28,8 @@ namespace loopaScan.Models
             {
                 await Task.Run(() =>
                 {
+                    IsScanning = true;
+                    IPsList.RemoveRange(0, Session.ScannedIPsCount); // delete scanned IPs
                     List<List<string>> list = Generic.SplitStringList(IPsList, Session.ThreadsCount);
 
                     foreach (List<string> lst in list)
@@ -39,7 +37,8 @@ namespace loopaScan.Models
                         CreateScanTask(lst);
                     }
                 });
-            } else System.Windows.MessageBox.Show("IP-адреса не обнаружены");
+            }
+            else System.Windows.MessageBox.Show("IP-адреса не обнаружены");
         }
         public void StopScan()
         {
@@ -52,18 +51,19 @@ namespace loopaScan.Models
             {
                 foreach (string ip in ips)
                 {
-                    ScanIP(ip);
-
-                    if (!IsScanning)
+                    foreach (string port in Session.Ports)
                     {
-                        break;
+                        if (!IsScanning) return;
+                        ScanIP(ip, port);
                     }
                 }
             });
         }
-        private void ScanIP(string ip)
+        private void ScanIP(string ip, string port)
         {
-            Scan scan = new Scan(ip);
+            Scan scan = new Scan(ip, port);
+            if (!IsScanning) return;
+
             Session.ScannedIPsCount++;
             if (scan.IsSuccess)
             {
@@ -75,11 +75,16 @@ namespace loopaScan.Models
         {
             try
             {
-                IPsList = new List<string>(File.ReadAllLines($"{Directories.IPfiles}\\{session.FileName}"));
+                IPsList = ParseRange($"{Directories.IPfiles}\\{session.FileName}");
                 Session.IPsCount = IPsList.Count;
                 return true;
             }
             catch { return false; }
+        }
+        private List<string> ParseRange(string filepath)
+        {
+            var result = IPParser.Start(filepath);
+            return result;
         }
     }
 }

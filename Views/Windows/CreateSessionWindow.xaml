@@ -4,7 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:loopaScan.Views.Windows"
-        Title="Создание сессии" Height="200" Width="150"
+        Title="Создание сессии" Height="240" Width="180"
         ResizeMode="NoResize">
     
     <StackPanel HorizontalAlignment="Center" Width="120">
@@ -19,10 +19,15 @@
         </StackPanel>
 
         <StackPanel>
+            <TextBlock Text="Порты(через пробел)" FontWeight="DemiBold" HorizontalAlignment="Center"/>
+            <TextBox Name="SessionPorts" />
+        </StackPanel>
+
+        <StackPanel>
             <TextBlock Text="Файл" FontWeight="DemiBold"  HorizontalAlignment="Center"/>
             <Button Content="Выбрать" Click="OpenFile" Width="60"/>
         </StackPanel>
 
-        <Button Content="Создать" Click="Create" FontWeight="Bold" Margin="0, 15, 0, 0"/>
+        <Button Content="Создать" Click="Create" FontWeight="Bold" Margin="0, 10, 0, 0"/>
     </StackPanel>
 </Window>

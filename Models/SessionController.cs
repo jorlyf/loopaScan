@@ -1,5 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 using System.IO;
+using System.Collections.Generic;
 using Newtonsoft.Json;
 
 using loopaScan.Infrastructure;
@@ -23,7 +24,7 @@ namespace loopaScan.Models
             foreach (Session session in sessions)
             {
                 if (!session.Save())
-                    System.Windows.MessageBox.Show("Session was not saved");
+                    System.Windows.MessageBox.Show($"Не вышло сохранить сессию с именем {session.Name}");
             }
             return true;
         }
@@ -38,6 +39,7 @@ namespace loopaScan.Models
         public int ScannedIPsCount { get; set; }
         public int ScannedSuccessIPsCount { get; set; }
         public int ThreadsCount { get; set; }
+        public List<string> Ports { get; set; }
 
         public bool Save()
         {
